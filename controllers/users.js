@@ -1,5 +1,32 @@
 const User = require('../models/user');
 
+const ERRORS = {
+  BAD_REQUEST: 400,
+  NOT_FOUND: 404,
+  SERVER_ERROR: 500
+};
+
+const checkUser = (user, res) => {
+  if (user) {
+    return res.send(user);
+  }
+  return res
+    .status(ERRORS.NOT_FOUND)
+    .send({ message: 'Запрашиваемый пользователь не найден.' });
+};
+
+const getUsers = (req, res) => {
+  console.log('start getUsers controller');
+  User.find({})
+    .then((users) => res.send({ data: users }))
+    .catch(() => {
+      console.log('Error in getUsers');
+      res
+        .status(ERRORS.SERVER_ERROR)
+        .send({ message: 'Ошибка на сервере.' });
+    });
+};
+
 const createUser = (req, res) => {
   console.log('start createUser controller');
   const { name, about, avatar } = req.body;
@@ -10,77 +37,74 @@ const createUser = (req, res) => {
     .catch((error) => {
       console.log('Error in createUser');
       if (error.name === 'ValidationError') {
-        res.status(400).send({ message: `Error: ${error}` });
-      } else {
-        res.status(500).send({ message: `Error: ${error}` });
+        return res.status(ERRORS.BAD_REQUEST).send({
+          message: 'Переданы некорректные данные.',
+        });
       }
-    });
-};
-
-const getUsers = (req, res) => {
-  console.log('start getUsers controller');
-  User.find()
-    .then((user) => res.send(user))
-    .catch((error) => {
-      console.log('Error in getUsers');
-      res.status(500).send({ message: `Error: ${error}` });
+      return res
+        .status(ERRORS.SERVER_ERROR)
+        .send({ message: 'Ошибка на сервере.' });
     });
 };
 
 const getUserById = (req, res) => {
   console.log('start getUserById controller');
   const { userId } = req.params;
+
   User.findById(userId)
-    .then((user) => {
-      res.send(user);
-    })
+    .then((user) => checkUser(user, res))
     .catch((error) => {
       console.log('Error in getUserById');
       if (error.name === 'CastError') {
-        res.status(404).send({ message: `Error: ${error}` });
-      } else {
-        res.status(500).send({ message: `Error: ${error}` });
+        return res.status(ERRORS.BAD_REQUEST).send({ message: 'Некорректный id.' });
       }
+      return res
+        .status(ERRORS.SERVER_ERROR)
+        .send({ message: 'Ошибка на сервере.' });
     });
 };
 
 const editProfile = (req, res) => {
   console.log('start editProfile controller');
-  const { id } = req.user;
-  const { name = res.name, about = res.about } = req.body;
+  const id = req.user._id;
+  const { name, about } = req.body;
+
   User.findByIdAndUpdate(
     id,
     { name, about },
-    { new: true, }
+    { new: true, runValidators: true }
   )
-    .then((user) => {
-      res.send(user);
-    })
+    .then((user) => checkUser(user, res))
     .catch((error) => {
       console.log('Error in editProfile');
-      if (error.name === 'CastError') {
-        res.status(404).send({ message: `Error: ${error}` });
-      } else {
-        res.status(500).send({ message: `Error: ${error}` });
+      if (error.name === 'ValidationError') {
+        return res.status(ERRORS.BAD_REQUEST).send({
+          message: 'Переданы некорректные данные при обновлении профиля.',
+        });
       }
+      return res
+        .status(ERRORS.SERVER_ERROR)
+        .send({ message: 'Ошибка на сервере.' });
     });
 };
 
 const updateAvatar = (req, res) => {
   console.log('start updateAvatar controller');
-  const { id } = req.user;
-  const { avatar } = req.body;
-  User.findByIdAndUpdate(
-    id,
-    { avatar },
-    { new: true, }
-  )
-    .then((user) => {
-      res.send(user);
-    })
+  const id = req.user._id;
+  const avatar = req.body;
+
+  User.findByIdAndUpdate(id, avatar, { new: true, runValidators: true })
+    .then((user) => checkUser(user, res))
     .catch((error) => {
       console.log('Error in updateAvatar');
-      res.status(500).send({ message: `Error: ${error}` });
+      if (error.name === 'ValidationError') {
+        return res.status(ERRORS.BAD_REQUEST).send({
+          message: 'Переданы некорректные данные при обновлении аватара.',
+        });
+      }
+      return res
+        .status(ERRORS.SERVER_ERROR)
+        .send({ message: 'Ошибка на сервере.' });
     });
 };
 
