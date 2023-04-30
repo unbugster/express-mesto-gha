@@ -15,8 +15,6 @@ mongoose.connect('mongodb://127.0.0.1:27017/mestodb').then(() => {
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-app.use(router);
-
 app.use((req, res, next) => {
   req.user = {
     _id: '644d698b3099eb1660ebfa1d'
@@ -24,6 +22,8 @@ app.use((req, res, next) => {
 
   next();
 });
+
+app.use(router);
 
 app.listen(PORT, () => {
   console.log(`Start server on port: ${PORT}`);
