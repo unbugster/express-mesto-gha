@@ -10,8 +10,16 @@
     "ecmaVersion": "latest"
   },
   "rules": {
-    "allow": [
-      "_id"
-    ]
+    "no-console": "off",
+    "no-underscore-dangle": [
+      "error",
+      {
+        "allow": [
+          "_id"
+        ]
+      }
+    ],
+    "comma-dangle": "off",
+    "object-curly-newline": "off"
   }
 }
