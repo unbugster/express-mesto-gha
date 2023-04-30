@@ -1,17 +1,12 @@
 const User = require('../models/user');
-
-const ERRORS = {
-  BAD_REQUEST: 400,
-  NOT_FOUND: 404,
-  SERVER_ERROR: 500
-};
+const { ERROR_CODES } = require('../utils/constants');
 
 const checkUser = (user, res) => {
   if (user) {
     return res.send(user);
   }
   return res
-    .status(ERRORS.NOT_FOUND)
+    .status(ERROR_CODES.NOT_FOUND)
     .send({ message: 'Запрашиваемый пользователь не найден.' });
 };
 
@@ -22,7 +17,7 @@ const getUsers = (req, res) => {
     .catch(() => {
       console.log('Error in getUsers');
       res
-        .status(ERRORS.SERVER_ERROR)
+        .status(ERROR_CODES.SERVER_ERROR)
         .send({ message: 'Ошибка на сервере.' });
     });
 };
@@ -30,6 +25,7 @@ const getUsers = (req, res) => {
 const createUser = (req, res) => {
   console.log('start createUser controller');
   const { name, about, avatar } = req.body;
+
   User.create({ name, about, avatar })
     .then((newUser) => {
       res.send(newUser);
@@ -37,12 +33,12 @@ const createUser = (req, res) => {
     .catch((error) => {
       console.log('Error in createUser');
       if (error.name === 'ValidationError') {
-        return res.status(ERRORS.BAD_REQUEST).send({
+        return res.status(ERROR_CODES.BAD_REQUEST).send({
           message: 'Переданы некорректные данные.',
         });
       }
       return res
-        .status(ERRORS.SERVER_ERROR)
+        .status(ERROR_CODES.SERVER_ERROR)
         .send({ message: 'Ошибка на сервере.' });
     });
 };
@@ -56,10 +52,10 @@ const getUserById = (req, res) => {
     .catch((error) => {
       console.log('Error in getUserById');
       if (error.name === 'CastError') {
-        return res.status(ERRORS.BAD_REQUEST).send({ message: 'Некорректный id.' });
+        return res.status(ERROR_CODES.BAD_REQUEST).send({ message: 'Некорректный id.' });
       }
       return res
-        .status(ERRORS.SERVER_ERROR)
+        .status(ERROR_CODES.SERVER_ERROR)
         .send({ message: 'Ошибка на сервере.' });
     });
 };
@@ -78,12 +74,12 @@ const editProfile = (req, res) => {
     .catch((error) => {
       console.log('Error in editProfile');
       if (error.name === 'ValidationError') {
-        return res.status(ERRORS.BAD_REQUEST).send({
+        return res.status(ERROR_CODES.BAD_REQUEST).send({
           message: 'Переданы некорректные данные при обновлении профиля.',
         });
       }
       return res
-        .status(ERRORS.SERVER_ERROR)
+        .status(ERROR_CODES.SERVER_ERROR)
         .send({ message: 'Ошибка на сервере.' });
     });
 };
@@ -98,12 +94,12 @@ const updateAvatar = (req, res) => {
     .catch((error) => {
       console.log('Error in updateAvatar');
       if (error.name === 'ValidationError') {
-        return res.status(ERRORS.BAD_REQUEST).send({
+        return res.status(ERROR_CODES.BAD_REQUEST).send({
           message: 'Переданы некорректные данные при обновлении аватара.',
         });
       }
       return res
-        .status(ERRORS.SERVER_ERROR)
+        .status(ERROR_CODES.SERVER_ERROR)
         .send({ message: 'Ошибка на сервере.' });
     });
 };
