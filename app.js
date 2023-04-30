@@ -25,6 +25,12 @@ app.use((req, res, next) => {
 
 app.use(router);
 
+app.use((req, res) => {
+  res.status(404).send({
+    message: 'Неправильный путь',
+  });
+});
+
 app.listen(PORT, () => {
   console.log(`Start server on port: ${PORT}`);
 });
