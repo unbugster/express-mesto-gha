@@ -1,3 +1,4 @@
+const { Error } = require('mongoose');
 const Card = require('../models/card');
 const { ERROR_CODES } = require('../utils/constants');
 
@@ -12,6 +13,7 @@ const checkCard = (card, res) => {
 
 const getCards = (req, res) => {
   Card.find({})
+    .populate(['owner', 'likes'])
     .then((cards) => {
       res.send(cards);
     })
@@ -31,7 +33,7 @@ const createCard = (req, res) => {
       res.send(newCard);
     })
     .catch((error) => {
-      if (error.name === 'ValidationError') {
+      if (error instanceof Error.ValidationError) {
         return res.status(ERROR_CODES.BAD_REQUEST).send({
           message: 'Переданы некорректные данные при создании карточки.',
         });
@@ -55,7 +57,7 @@ const deleteCard = (req, res) => {
       return res.send({ message: 'Карточка удалена.' });
     })
     .catch((error) => {
-      if (error.name === 'CastError') {
+      if (error instanceof Error.CastError) {
         return res.status(ERROR_CODES.BAD_REQUEST).send({ message: 'Некорректный id.' });
       }
       return res
@@ -71,11 +73,11 @@ const likeCard = (req, res) => {
   Card.findByIdAndUpdate(
     cardId,
     { $addToSet: { likes: id } },
-    { new: true, runValidators: true }
+    { new: true },
   )
     .then((card) => checkCard(card, res))
     .catch((error) => {
-      if (error.name === 'CastError') {
+      if (error instanceof Error.CastError) {
         return res.status(ERROR_CODES.BAD_REQUEST).send({ message: 'Некорректный id.' });
       }
       return res
@@ -91,11 +93,11 @@ const dislikeCard = (req, res) => {
   Card.findByIdAndUpdate(
     cardId,
     { $pull: { likes: id } },
-    { new: true, runValidators: true }
+    { new: true },
   )
     .then((card) => checkCard(card, res))
     .catch((error) => {
-      if (error.name === 'CastError') {
+      if (error instanceof Error.CastError) {
         return res.status(ERROR_CODES.BAD_REQUEST).send({ message: 'Некорректный id.' });
       }
       return res

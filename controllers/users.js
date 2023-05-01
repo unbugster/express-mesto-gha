@@ -1,3 +1,4 @@
+const { Error } = require('mongoose');
 const User = require('../models/user');
 const { ERROR_CODES } = require('../utils/constants');
 
@@ -28,11 +29,11 @@ const createUser = (req, res) => {
 
   User.create({ name, about, avatar })
     .then((newUser) => {
-      res.send(newUser);
+      res.status(ERROR_CODES.CREATED).send(newUser);
     })
     .catch((error) => {
       console.log('Error in createUser');
-      if (error.name === 'ValidationError') {
+      if (error instanceof Error.ValidationError) {
         return res.status(ERROR_CODES.BAD_REQUEST).send({
           message: 'Переданы некорректные данные.',
         });
@@ -51,7 +52,7 @@ const getUserById = (req, res) => {
     .then((user) => checkUser(user, res))
     .catch((error) => {
       console.log('Error in getUserById');
-      if (error.name === 'CastError') {
+      if (error instanceof Error.CastError) {
         return res.status(ERROR_CODES.BAD_REQUEST).send({ message: 'Некорректный id.' });
       }
       return res
@@ -68,12 +69,12 @@ const editProfile = (req, res) => {
   User.findByIdAndUpdate(
     id,
     { name, about },
-    { new: true, runValidators: true }
+    { new: true, runValidators: true },
   )
     .then((user) => checkUser(user, res))
     .catch((error) => {
       console.log('Error in editProfile');
-      if (error.name === 'ValidationError') {
+      if (error instanceof Error.ValidationError) {
         return res.status(ERROR_CODES.BAD_REQUEST).send({
           message: 'Переданы некорректные данные при обновлении профиля.',
         });
@@ -93,7 +94,7 @@ const updateAvatar = (req, res) => {
     .then((user) => checkUser(user, res))
     .catch((error) => {
       console.log('Error in updateAvatar');
-      if (error.name === 'ValidationError') {
+      if (error instanceof Error.ValidationError) {
         return res.status(ERROR_CODES.BAD_REQUEST).send({
           message: 'Переданы некорректные данные при обновлении аватара.',
         });
@@ -104,4 +105,6 @@ const updateAvatar = (req, res) => {
     });
 };
 
-module.exports = { createUser, getUsers, getUserById, editProfile, updateAvatar };
+module.exports = {
+  createUser, getUsers, getUserById, editProfile, updateAvatar,
+};
