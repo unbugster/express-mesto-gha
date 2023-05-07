@@ -1,3 +1,4 @@
+const bcrypt = require('bcryptjs');
 const { Error } = require('mongoose');
 const User = require('../models/user');
 const { ERROR_CODES } = require('../utils/constants');
@@ -24,24 +25,34 @@ const getUsers = (req, res) => {
 };
 
 const createUser = (req, res) => {
-  console.log('start createUser controller');
-  const { name, about, avatar } = req.body;
-
-  User.create({ name, about, avatar })
-    .then((newUser) => {
-      res.status(ERROR_CODES.CREATED).send(newUser);
+  bcrypt.hash(req.body.password, 10).then((hash) => {
+    User.create({
+      email: req.body.email,
+      password: hash,
+      name: req.body.name,
+      about: req.body.about,
+      avatar: req.body.avatar,
     })
-    .catch((error) => {
-      console.log('Error in createUser');
-      if (error instanceof Error.ValidationError) {
-        return res.status(ERROR_CODES.BAD_REQUEST).send({
-          message: 'Переданы некорректные данные.',
+      .then((newUser) => {
+        res.status(201).send({
+          email: newUser.email,
+          name: newUser.name,
+          about: newUser.about,
+          avatar: newUser.avatar,
         });
-      }
-      return res
-        .status(ERROR_CODES.SERVER_ERROR)
-        .send({ message: 'Ошибка на сервере.' });
-    });
+      })
+      .catch((error) => {
+        console.log('Error in createUser');
+        if (error instanceof Error.ValidationError) {
+          return res.status(ERROR_CODES.BAD_REQUEST).send({
+            message: 'Переданы некорректные данные.',
+          });
+        }
+        return res
+          .status(ERROR_CODES.SERVER_ERROR)
+          .send({ message: 'Ошибка на сервере.' });
+      });
+  });
 };
 
 const getUserById = (req, res) => {
