@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const router = require('./routes');
 const { ERROR_CODES } = require('./utils/constants');
 const { createUsers, login } = require('./controllers/users');
+const auth = require('./middlewares/auth');
 
 const app = express();
 const { PORT = 3000 } = process.env;
@@ -18,6 +19,7 @@ app.use(express.urlencoded({ extended: true }));
 app.post('/signup', createUsers);
 app.post('/signin', login);
 
+app.use(auth);
 app.use(router);
 
 app.use((req, res) => {
