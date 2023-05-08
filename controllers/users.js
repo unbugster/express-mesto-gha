@@ -1,4 +1,5 @@
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 const { Error } = require('mongoose');
 const User = require('../models/user');
 const { ERROR_CODES } = require('../utils/constants');
@@ -34,7 +35,7 @@ const createUser = (req, res) => {
       avatar: req.body.avatar,
     })
       .then((newUser) => {
-        res.status(201).send({
+        res.status(ERROR_CODES.CREATED).send({
           email: newUser.email,
           name: newUser.name,
           about: newUser.about,
@@ -116,6 +117,35 @@ const updateAvatar = (req, res) => {
     });
 };
 
+const login = (req, res) => {
+  const { email, password } = req.body;
+  User.findOne({ email })
+    .select('+password')
+    .then((user) => {
+      if (!user) {
+        return Promise.reject(new Error('Неправильные почта или пароль'));
+      }
+      bcrypt.compare(password, user.password)
+        .then((matched) => {
+          if (!matched) {
+            return Promise.reject(new Error('Неправильные почта или пароль'));
+          }
+          const token = jwt.sign({ _id: user._id }, 'some-secret-key', { expiresIn: '7d' });
+          res.send({ token });
+        });
+    })
+    .catch((err) => {
+      res
+        .status(ERROR_CODES.UNAUTHORIZED)
+        .send({ message: err.message });
+    });
+};
+
 module.exports = {
-  createUser, getUsers, getUserById, editProfile, updateAvatar,
+  createUser,
+  getUsers,
+  getUserById,
+  editProfile,
+  updateAvatar,
+  login,
 };
