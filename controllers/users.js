@@ -141,6 +141,12 @@ const login = (req, res) => {
     });
 };
 
+const getCurrentUser = (req, res) => {
+  User.findById(req.user._id)
+    .then((user) => res.send(user))
+    .catch(() => res.status(ERROR_CODES.SERVER_ERROR).send({ message: 'Произошла ошибка при получении данных пользователя' }));
+};
+
 module.exports = {
   createUsers,
   getUsers,
@@ -148,4 +154,5 @@ module.exports = {
   editProfile,
   updateAvatar,
   login,
+  getCurrentUser,
 };
