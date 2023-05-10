@@ -1,32 +1,24 @@
 const express = require('express');
 const mongoose = require('mongoose');
+const { errors } = require('celebrate');
+
 const router = require('./routes');
-const { ERROR_CODES } = require('./utils/constants');
-const { createUsers, login } = require('./controllers/users');
-const auth = require('./middlewares/auth');
+const сentralizedErrors = require('./middlewares/errors');
 
 const app = express();
 const { PORT = 3000 } = process.env;
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 mongoose.connect('mongodb://127.0.0.1:27017/mestodb').then(() => {
 }).catch((err) => {
   console.log(`Error: ${err}`);
 });
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-app.post('/signup', createUsers);
-app.post('/signin', login);
-
-app.use(auth);
-app.use(router);
-
-app.use((req, res) => {
-  res.status(ERROR_CODES.NOT_FOUND).send({
-    message: 'Неправильный путь.',
-  });
-});
+app.use('/', router);
+app.use(errors());
+app.use(сentralizedErrors);
 
 app.listen(PORT, () => {
   console.log(`Start server on port: ${PORT}`);
