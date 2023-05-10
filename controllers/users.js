@@ -20,35 +20,46 @@ const getUsers = (req, res, next) => {
 };
 
 const createUsers = (req, res, next) => {
-  bcrypt.hash(req.body.password, 10).then((hash) => {
-    User.create({
-      email: req.body.email,
-      password: hash,
-      name: req.body.name,
-      about: req.body.about,
-      avatar: req.body.avatar,
-    })
-      .then((newUser) => {
-        res.status(ERROR_CODES.CREATED).send({
-          email: newUser.email,
-          name: newUser.name,
-          about: newUser.about,
-          avatar: newUser.avatar,
+  const {
+    name,
+    about,
+    avatar,
+    email,
+    password,
+  } = req.body;
+
+  bcrypt.hash(password, 10)
+    .then((hash) => {
+      User.create(
+        {
+          email,
+          name,
+          about,
+          avatar,
+          password: hash,
+        },
+      )
+        .then((newUser) => {
+          res.status(ERROR_CODES.CREATED).send({
+            email: newUser.email,
+            name: newUser.name,
+            about: newUser.about,
+            avatar: newUser.avatar,
+          });
+        })
+
+        .catch((error) => {
+          console.log('Error in createUser');
+          if (error instanceof Error.ValidationError) {
+            return next(new customError.BadRequestError('Некорректно переданы данные нового пользователя'));
+          }
+          if (error.code === 11000) {
+            return next(new customError.ConflictError('Пользователь с таким email уже зарегистрирован'));
+          }
+
+          next(error);
         });
-      })
-
-      .catch((error) => {
-        console.log('Error in createUser');
-        if (error instanceof Error.ValidationError) {
-          next(new customError.BadRequestError('Некорректно переданы данные нового пользователя'));
-        }
-        if (error.code === 11000) {
-          next(new customError.ConflictError('Пользователь с таким email уже зарегистрирован'));
-        }
-
-        next(error);
-      });
-  });
+    }).catch(next);
 };
 
 const getUserById = (req, res, next) => {
@@ -57,9 +68,7 @@ const getUserById = (req, res, next) => {
 
   User.findById(userId)
     .then((user) => checkUser(user, res))
-    .catch((error) => {
-      next(error);
-    });
+    .catch(next);
 };
 
 const editProfile = (req, res, next) => {
@@ -73,7 +82,12 @@ const editProfile = (req, res, next) => {
     { new: true, runValidators: true },
   )
     .then((user) => checkUser(user, res))
-    .catch(next);
+    .catch((error) => {
+      if (error instanceof Error.ValidationError) {
+        return next(new customError.BadRequestError('Некорректные данные при редактировании профиля'));
+      }
+      next(error);
+    });
 };
 
 const updateAvatar = (req, res, next) => {
@@ -83,29 +97,32 @@ const updateAvatar = (req, res, next) => {
 
   User.findByIdAndUpdate(id, avatar, { new: true, runValidators: true })
     .then((user) => checkUser(user, res))
-    .catch(next);
+    .catch((error) => {
+      if (error instanceof Error.ValidationError) {
+        return next(new customError.BadRequestError('Некорректные данные при редактировании аватара'));
+      }
+      next(error);
+    });
 };
 
 const login = (req, res, next) => {
-  console.log('===login');
-
   const { email, password } = req.body;
 
   return User.findOne({ email })
     .select('+password')
     .then((user) => {
-      console.log('===user', user);
       if (!user) {
-        console.log('===error');
-        next(new customError.UnauthorizedError('Неправильные почта или пароль'));
+        return next(new customError.UnauthorizedError('Неправильные почта или пароль'));
       }
       return bcrypt.compare(password, user.password).then((matched) => {
         if (!matched) {
-          next(new customError.UnauthorizedError('Неправильные почта или пароль'));
+          return next(new customError.UnauthorizedError('Неправильные почта или пароль'));
         }
+
         const token = jwt.sign({ _id: user._id }, 'some-secret-key', {
           expiresIn: '7d',
         });
+
         return res.send({ token });
       });
     })

@@ -28,7 +28,7 @@ const createCard = (req, res, next) => {
     })
     .catch((error) => {
       if (error instanceof Error.ValidationError) {
-        next(
+        return next(
           new customError.BadRequestError(
             'Переданы некорректные данные при создании новой карточки.',
           ),
@@ -51,7 +51,7 @@ const deleteCard = (req, res, next) => {
         throw new customError.ForbiddenError('Нельзя удалить чужую карточку.');
       }
 
-      Card.deleteOne()
+      card.deleteOne()
         .then(() => {
           res.send({ message: 'Карточка удалена.' });
         })
@@ -97,7 +97,7 @@ const dislikeCard = (req, res, next) => {
     .then((card) => checkCard(card, res))
     .catch((error) => {
       if (error instanceof Error.CastError) {
-        next(new customError.BadRequestError('Ошибка удаления лайка. Некорректно введён id'));
+        return next(new customError.BadRequestError('Ошибка удаления лайка. Некорректно введён id'));
       }
       next(error);
     });
