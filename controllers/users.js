@@ -7,7 +7,7 @@ const customError = require('../errors');
 
 const checkUser = (user, res) => {
   if (!user) {
-    throw new customError.NotFound('Нет пользователя с таким id');
+    throw new customError.NotFoundError('Пользователь с таким id не найден');
   }
   return res.send(user);
 };
@@ -87,17 +87,21 @@ const updateAvatar = (req, res, next) => {
 };
 
 const login = (req, res, next) => {
+  console.log('===login');
+
   const { email, password } = req.body;
 
-  User.findOne({ email })
+  return User.findOne({ email })
     .select('+password')
     .then((user) => {
+      console.log('===user', user);
       if (!user) {
-        throw new customError.Unauthorized('Неправильные почта или пароль');
+        console.log('===error');
+        next(new customError.UnauthorizedError('Неправильные почта или пароль'));
       }
       return bcrypt.compare(password, user.password).then((matched) => {
         if (!matched) {
-          next(new customError.Unauthorized('Неправильные почта или пароль'));
+          next(new customError.UnauthorizedError('Неправильные почта или пароль'));
         }
         const token = jwt.sign({ _id: user._id }, 'some-secret-key', {
           expiresIn: '7d',

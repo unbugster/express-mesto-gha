@@ -42,18 +42,24 @@ const deleteCard = (req, res, next) => {
   const { cardId } = req.params;
   const userId = req.user._id;
 
-  Card.deleteOne({ _id: cardId })
-    .then((card) => checkCard(card, res))
+  Card.findById(cardId)
     .then((card) => {
+      if (!card) {
+        throw new customError.NotFoundError('Карточка с указанным id не найдена.');
+      }
       if (card.owner.toString() !== userId) {
-        throw new customError.ForbiddenError('Нельзя удалить чужую карточку');
+        throw new customError.ForbiddenError('Нельзя удалить чужую карточку.');
       }
 
-      return res.send({ message: 'Карточка удалена.' });
+      Card.deleteOne()
+        .then(() => {
+          res.send({ message: 'Карточка удалена.' });
+        })
+        .catch(next);
     })
     .catch((error) => {
       if (error instanceof Error.CastError) {
-        next(new customError.BadRequestError('Ошибка удаления. Некорректно введён id'));
+        next(new customError.BadRequestError('Ошибка удаления. Некорректно введён id.'));
       } else {
         next(error);
       }
