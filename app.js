@@ -2,6 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const { errors } = require('celebrate');
 
+const { requestLogger, errorLogger } = require('./middlewares/logger');
 const router = require('./routes');
 const сentralizedErrors = require('./middlewares/errors');
 
@@ -16,7 +17,14 @@ mongoose.connect('mongodb://127.0.0.1:27017/mestodb').then(() => {
   console.log(`Error: ${err}`);
 });
 
+// подключаем логгер запросов
+app.use(requestLogger);
+
 app.use('/', router);
+
+// подключаем логгер ошибок
+app.use(errorLogger);
+
 app.use(errors());
 app.use(сentralizedErrors);
 
