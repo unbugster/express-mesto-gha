@@ -5,6 +5,7 @@ const { errors } = require('celebrate');
 const { requestLogger, errorLogger } = require('./middlewares/logger');
 const router = require('./routes');
 const сentralizedErrors = require('./middlewares/errors');
+const cors = require('./middlewares/cors');
 
 const app = express();
 const { PORT = 3000 } = process.env;
@@ -19,6 +20,8 @@ mongoose.connect('mongodb://127.0.0.1:27017/mestodb').then(() => {
 
 // подключаем логгер запросов
 app.use(requestLogger);
+// подключаем cors
+app.use(cors);
 
 app.use('/', router);
 

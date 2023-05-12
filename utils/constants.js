@@ -6,7 +6,14 @@ const ERROR_CODES = {
   UNAUTHORIZED: 401,
 };
 
+// Массив доменов, с которых разрешены кросс-доменные запросы
+const allowedCors = [
+  'https://mesto.unbugster.nomoredomains.monster',
+  'http://mesto.unbugster.nomoredomains.monster',
+  'localhost:3000',
+];
+
 /* eslint-disable no-useless-escape */
 const URL_REGEXP = /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/;
 
-module.exports = { ERROR_CODES, URL_REGEXP };
+module.exports = { ERROR_CODES, URL_REGEXP, allowedCors };
