@@ -10,7 +10,10 @@ const ERROR_CODES = {
 const allowedCors = [
   'https://mesto.unbugster.nomoredomains.monster',
   'http://mesto.unbugster.nomoredomains.monster',
+  'https://api.mesto.unbugster.nomoredomains.monster',
+  'http://api.mesto.unbugster.nomoredomains.monster',
   'localhost:3000',
+  'http://localhost:3000',
 ];
 
 /* eslint-disable no-useless-escape */
