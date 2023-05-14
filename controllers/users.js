@@ -5,6 +5,8 @@ const User = require('../models/user');
 const { ERROR_CODES } = require('../utils/constants');
 const customError = require('../errors');
 
+const { NODE_ENV, JWT_SECRET } = process.env;
+
 const checkUser = (user, res) => {
   if (!user) {
     throw new customError.NotFoundError('Пользователь с таким id не найден');
@@ -119,7 +121,7 @@ const login = (req, res, next) => {
           return next(new customError.UnauthorizedError('Неправильные почта или пароль'));
         }
 
-        const token = jwt.sign({ _id: user._id }, 'some-secret-key', {
+        const token = jwt.sign({ _id: user._id }, NODE_ENV === 'production' ? JWT_SECRET : 'some-secret-key', {
           expiresIn: '7d',
         });
 
